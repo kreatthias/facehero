@@ -17,11 +17,8 @@ class FaceHero : public QMainWindow
 public:
     explicit FaceHero(QWidget *parent = 0);
     ~FaceHero();
-
-private slots:
-    void on_actionVideodatei_ffnen_triggered();
     void on_actionKamera_ffnen_triggered();
-    void on_actionPlay_triggered();
+
 private:
     Ui::FaceHero *ui;
     VideoEngine *videoThread;
