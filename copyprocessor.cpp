@@ -7,11 +7,35 @@
 #include <stdio.h>
 #include <QDebug>
 
+#include <QThread>
+#include "midiinput.h"
+
 using namespace cv;
 using namespace std;
+using namespace drumstick::rt;
 
-CopyProcessor::CopyProcessor()
+CopyProcessor::CopyProcessor() :
+    midiOutput(0),
+    face_cascade(),
+    eyes_cascade()
 {
+    QStringList outputConnections = midiOutput.connections(true);
+    qDebug() << "MIDI Output Connections:";
+    for (int i = 0; i < outputConnections.size(); ++i){
+        qDebug() << outputConnections.at(i);
+    }
+    midiOutput.open("Microsoft GS Wavetable Synth");
+
+
+    if( !face_cascade.load( "D:/Data/Uni/AVPRG/avprg-master/FaceHero/haarcascade_frontalface_alt.xml" ) ) {
+        printf("--(!)Error loading face cascade\n");
+    }
+
+    if( !eyes_cascade.load( "D:/Data/Uni/AVPRG/avprg-master/FaceHero/haarcascade_eye_tree_eyeglasses.xml" ) ){
+        printf("--(!)Error loading eyes cascade\n");
+    }
+
+    qDebug() << "cacades geladen";
 
 }
 
@@ -24,20 +48,7 @@ void CopyProcessor::startProcessing(const VideoFormat& format){
 cv::Mat CopyProcessor::process(const cv::Mat&frame){
     //source.copyTo(copyOfSource);
 
-    CascadeClassifier face_cascade;
-    CascadeClassifier eyes_cascade;
 
-    if( !face_cascade.load( "D:/Data/Uni/AVPRG/avprg-master/FaceHero/haarcascade_frontalface_alt.xml" ) ) {
-        printf("--(!)Error loading face cascade\n");
-        return frame;
-    }
-
-    if( !eyes_cascade.load( "D:/Data/Uni/AVPRG/avprg-master/FaceHero/haarcascade_eye_tree_eyeglasses.xml" ) ){
-        printf("--(!)Error loading eyes cascade\n");
-        return frame;
-    }
-
-    qDebug() << "cacades geladen";
 
     std::vector<Rect> faces;
     Mat frame_gray;
@@ -60,6 +71,7 @@ cv::Mat CopyProcessor::process(const cv::Mat&frame){
                 std::vector<Rect> eyes;
 
                 qDebug() << i << " gesicht";
+                playSound(i);
 
 //                //-- In each face, detect eyes
 //                eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |CASCADE_SCALE_IMAGE, Size(30, 30) );
@@ -74,4 +86,26 @@ cv::Mat CopyProcessor::process(const cv::Mat&frame){
             }
     qDebug() << "fertig";
     return frame;
+}
+
+void CopyProcessor::playSound(int sound){
+    // send MIDI Note On
+    int channel = 0;
+    int note;
+    if (sound == 0) {
+        note = 60;
+    } else if (sound == 1) {
+        note = 62;
+    } else if (sound == 2) {
+        note = 64;
+    }
+
+    int velocity = 127;
+    midiOutput.sendNoteOn(channel, note, velocity);
+
+    // wait 1 second
+    QThread::sleep(1);
+
+    // send MIDI Note Off
+    midiOutput.sendNoteOff(channel, note, 0);
 }

@@ -23,5 +23,5 @@ FORMS    += facehero.ui
 
 include(../opencv/videoengine.pri)
 include(../opencv/opencv.pri)
-
+include(../drumstick/drumstick.pro)
 
