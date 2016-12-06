@@ -17,7 +17,8 @@ using namespace drumstick::rt;
 CopyProcessor::CopyProcessor() :
     midiOutput(0),
     face_cascade(),
-    eyes_cascade()
+    eyes_cascade(),
+    currentFrame(0)
 {
     QStringList outputConnections = midiOutput.connections(true);
     qDebug() << "MIDI Output Connections:";
@@ -46,12 +47,10 @@ void CopyProcessor::startProcessing(const VideoFormat& format){
 
 // wird für jedes Videoframe aufgerufen
 cv::Mat CopyProcessor::process(const cv::Mat&frame){
-    //source.copyTo(copyOfSource);
-
-
-
     std::vector<Rect> faces;
     Mat frame_gray;
+    int sound = 0;
+    if (currentFrame == 10) {
 
             cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
             qDebug() << "cvt";
@@ -71,7 +70,7 @@ cv::Mat CopyProcessor::process(const cv::Mat&frame){
                 std::vector<Rect> eyes;
 
                 qDebug() << i << " gesicht";
-                playSound(i);
+                sound = i;
 
 //                //-- In each face, detect eyes
 //                eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |CASCADE_SCALE_IMAGE, Size(30, 30) );
@@ -84,6 +83,11 @@ cv::Mat CopyProcessor::process(const cv::Mat&frame){
 //                    qDebug() << j << " augen";
 //                }
             }
+        currentFrame = 0;
+        playSound(sound);
+    } else {
+        currentFrame++;
+    }
     qDebug() << "fertig";
     return frame;
 }

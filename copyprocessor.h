@@ -24,6 +24,7 @@ public:
     MIDIOutput midiOutput;
     CascadeClassifier face_cascade;
     CascadeClassifier eyes_cascade;
+    int currentFrame;
 
 };
 
