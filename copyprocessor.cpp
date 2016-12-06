@@ -1,6 +1,14 @@
 #include "copyprocessor.h"
+#include "opencv2/objdetect/objdetect.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#include <iostream>
+#include <stdio.h>
+#include <QDebug>
 
 using namespace cv;
+using namespace std;
 
 CopyProcessor::CopyProcessor()
 {
@@ -13,8 +21,57 @@ void CopyProcessor::startProcessing(const VideoFormat& format){
 }
 
 // wird für jedes Videoframe aufgerufen
-cv::Mat CopyProcessor::process(const cv::Mat&source){
-    Mat copyOfSource;
-    source.copyTo(copyOfSource);
-    return copyOfSource;
+cv::Mat CopyProcessor::process(const cv::Mat&frame){
+    //source.copyTo(copyOfSource);
+
+    CascadeClassifier face_cascade;
+    CascadeClassifier eyes_cascade;
+
+    if( !face_cascade.load( "D:/Data/Uni/AVPRG/avprg-master/FaceHero/haarcascade_frontalface_alt.xml" ) ) {
+        printf("--(!)Error loading face cascade\n");
+        return frame;
+    }
+
+    if( !eyes_cascade.load( "D:/Data/Uni/AVPRG/avprg-master/FaceHero/haarcascade_eye_tree_eyeglasses.xml" ) ){
+        printf("--(!)Error loading eyes cascade\n");
+        return frame;
+    }
+
+    qDebug() << "cacades geladen";
+
+    std::vector<Rect> faces;
+    Mat frame_gray;
+
+            cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
+            qDebug() << "cvt";
+            equalizeHist( frame_gray, frame_gray );
+            qDebug() << "hist";
+
+            //-- Detect faces
+            face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+            qDebug() << "detect";
+
+            for ( size_t i = 0; i < faces.size(); i++ )
+            {
+                Point center( faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2 );
+                ellipse( frame, center, Size( faces[i].width/2, faces[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4, 8, 0 );
+
+                Mat faceROI = frame_gray( faces[i] );
+                std::vector<Rect> eyes;
+
+                qDebug() << i << " gesicht";
+
+//                //-- In each face, detect eyes
+//                eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |CASCADE_SCALE_IMAGE, Size(30, 30) );
+
+//                for ( size_t j = 0; j < eyes.size(); j++ )
+//                {
+//                    Point eye_center( faces[i].x + eyes[j].x + eyes[j].width/2, faces[i].y + eyes[j].y + eyes[j].height/2 );
+//                    int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
+//                    circle( frame, eye_center, radius, Scalar( 255, 0, 0 ), 4, 8, 0 );
+//                    qDebug() << j << " augen";
+//                }
+            }
+    qDebug() << "fertig";
+    return frame;
 }

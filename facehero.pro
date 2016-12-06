@@ -24,3 +24,4 @@ FORMS    += facehero.ui
 include(../opencv/videoengine.pri)
 include(../opencv/opencv.pri)
 
+
